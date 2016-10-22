@@ -27,6 +27,8 @@ module Mutant
     def run_mutation_analysis
       @result = run_driver(Parallel.async(mutation_test_config))
       reporter.report(result)
+
+      File.open('resultfile', 'w') {|f| f.write(result.amount_mutations_alive) }
     end
 
     # Run driver
