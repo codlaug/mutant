@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module Mutant
   # An abstract context where mutations can be applied to.
   class Context
     include Adamantium::Flat, Concord::Public.new(:scope, :source_path)
     extend AST::Sexp
 
-    NAMESPACE_DELIMITER = '::'.freeze
+    NAMESPACE_DELIMITER = '::'
 
     # Return root node for mutation
     #

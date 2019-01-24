@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This spec is a good example for:
 #
 # If test look that ugly the class under test sucks.
@@ -26,7 +28,6 @@ RSpec.describe Mutant::Env::Bootstrap do
 
   let(:expected_env) do
     Mutant::Env.new(
-      actor_env:        Mutant::Actor::Env.new(Thread),
       config:           config,
       integration:      integration,
       matchable_scopes: [],
@@ -93,8 +94,7 @@ RSpec.describe Mutant::Env::Bootstrap do
         # Fix Class#name so other specs do not see this one
         class << invalid_class
           undef :name
-          def name
-          end
+          def name; end
         end
       end
 
@@ -151,8 +151,7 @@ RSpec.describe Mutant::Env::Bootstrap do
         # Fix Class#name so other specs do not see this one
         class << invalid_class
           undef :name
-          def name
-          end
+          def name; end
         end
       end
 

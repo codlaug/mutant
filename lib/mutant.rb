@@ -1,16 +1,18 @@
+# frozen_string_literal: true
+
 require 'abstract_type'
 require 'adamantium'
 require 'anima'
 require 'concord'
-require 'digest/sha1'
 require 'diff/lcs'
 require 'diff/lcs/hunk'
+require 'digest/sha1'
+require 'etc'
 require 'equalizer'
 require 'ice_nine'
 require 'morpher'
 require 'open3'
 require 'optparse'
-require 'parallel'
 require 'parser'
 require 'parser/current'
 require 'pathname'
@@ -27,10 +29,10 @@ Thread.abort_on_exception = true
 #
 # @api private
 module Mutant
-  EMPTY_STRING   = ''.freeze
+  EMPTY_STRING   = ''
   EMPTY_ARRAY    = [].freeze
   EMPTY_HASH     = {}.freeze
-  SCOPE_OPERATOR = '::'.freeze
+  SCOPE_OPERATOR = '::'
 
   # Test if CI is detected via environment
   #
@@ -54,13 +56,12 @@ require 'mutant/ast/node_predicates'
 require 'mutant/ast/regexp'
 require 'mutant/ast/regexp/transformer'
 require 'mutant/ast/regexp/transformer/direct'
-require 'mutant/ast/regexp/transformer/text'
-require 'mutant/ast/regexp/transformer/recursive'
-require 'mutant/ast/regexp/transformer/quantifier'
+require 'mutant/ast/regexp/transformer/named_group'
 require 'mutant/ast/regexp/transformer/options_group'
-require 'mutant/ast/regexp/transformer/character_set'
+require 'mutant/ast/regexp/transformer/quantifier'
+require 'mutant/ast/regexp/transformer/recursive'
 require 'mutant/ast/regexp/transformer/root'
-require 'mutant/ast/regexp/transformer/alternative'
+require 'mutant/ast/regexp/transformer/text'
 require 'mutant/ast/meta'
 require 'mutant/ast/meta/send'
 require 'mutant/ast/meta/const'
@@ -68,19 +69,14 @@ require 'mutant/ast/meta/symbol'
 require 'mutant/ast/meta/optarg'
 require 'mutant/ast/meta/resbody'
 require 'mutant/ast/meta/restarg'
-require 'mutant/actor'
-require 'mutant/actor/receiver'
-require 'mutant/actor/sender'
-require 'mutant/actor/mailbox'
-require 'mutant/actor/env'
 require 'mutant/parser'
 require 'mutant/isolation'
 require 'mutant/isolation/none'
 require 'mutant/isolation/fork'
 require 'mutant/parallel'
-require 'mutant/parallel/master'
-require 'mutant/parallel/worker'
+require 'mutant/parallel/driver'
 require 'mutant/parallel/source'
+require 'mutant/parallel/worker'
 require 'mutant/warning_filter'
 require 'mutant/require_highjack'
 require 'mutant/mutation'
@@ -92,13 +88,17 @@ require 'mutant/mutator/node'
 require 'mutant/mutator/node/generic'
 require 'mutant/mutator/node/regexp'
 require 'mutant/mutator/node/regexp/alternation_meta'
+require 'mutant/mutator/node/regexp/capture_group'
 require 'mutant/mutator/node/regexp/character_type'
+require 'mutant/mutator/node/regexp/end_of_line_anchor'
+require 'mutant/mutator/node/regexp/end_of_string_or_before_end_of_line_anchor'
+require 'mutant/mutator/node/regexp/greedy_zero_or_more'
 require 'mutant/mutator/node/literal'
 require 'mutant/mutator/node/literal/boolean'
 require 'mutant/mutator/node/literal/range'
 require 'mutant/mutator/node/literal/symbol'
 require 'mutant/mutator/node/literal/string'
-require 'mutant/mutator/node/literal/fixnum'
+require 'mutant/mutator/node/literal/integer'
 require 'mutant/mutator/node/literal/float'
 require 'mutant/mutator/node/literal/array'
 require 'mutant/mutator/node/literal/hash'
@@ -130,7 +130,6 @@ require 'mutant/mutator/node/send'
 require 'mutant/mutator/node/send/binary'
 require 'mutant/mutator/node/send/conditional'
 require 'mutant/mutator/node/send/attribute_assignment'
-require 'mutant/mutator/node/send/index'
 require 'mutant/mutator/node/when'
 require 'mutant/mutator/node/class'
 require 'mutant/mutator/node/define'
@@ -146,6 +145,8 @@ require 'mutant/mutator/node/regopt'
 require 'mutant/mutator/node/resbody'
 require 'mutant/mutator/node/rescue'
 require 'mutant/mutator/node/match_current_line'
+require 'mutant/mutator/node/index'
+require 'mutant/mutator/node/procarg_zero'
 require 'mutant/loader'
 require 'mutant/context'
 require 'mutant/scope'
@@ -172,6 +173,7 @@ require 'mutant/expression/method'
 require 'mutant/expression/methods'
 require 'mutant/expression/namespace'
 require 'mutant/test'
+require 'mutant/timer'
 require 'mutant/integration'
 require 'mutant/selector'
 require 'mutant/selector/expression'
@@ -188,34 +190,37 @@ require 'mutant/reporter/sequence'
 require 'mutant/reporter/cli'
 require 'mutant/reporter/cli/printer'
 require 'mutant/reporter/cli/printer/config'
-require 'mutant/reporter/cli/printer/env_result'
 require 'mutant/reporter/cli/printer/env_progress'
-require 'mutant/reporter/cli/printer/mutation_result'
+require 'mutant/reporter/cli/printer/env_result'
+require 'mutant/reporter/cli/printer/isolation_result'
 require 'mutant/reporter/cli/printer/mutation_progress_result'
-require 'mutant/reporter/cli/printer/subject_progress'
-require 'mutant/reporter/cli/printer/subject_result'
+require 'mutant/reporter/cli/printer/mutation_result'
 require 'mutant/reporter/cli/printer/status'
 require 'mutant/reporter/cli/printer/status_progressive'
+require 'mutant/reporter/cli/printer/subject_progress'
+require 'mutant/reporter/cli/printer/subject_result'
 require 'mutant/reporter/cli/printer/test_result'
 require 'mutant/reporter/cli/tput'
 require 'mutant/reporter/cli/format'
 require 'mutant/repository'
+require 'mutant/variable'
 require 'mutant/zombifier'
 
 module Mutant
   # Reopen class to initialize constant to avoid dep circle
   class Config
     DEFAULT = new(
-      expression_parser: Expression::Parser.new([
+      condition_variable: ConditionVariable,
+      expression_parser:  Expression::Parser.new([
         Expression::Method,
         Expression::Methods,
         Expression::Namespace::Exact,
         Expression::Namespace::Recursive
       ]),
-      fail_fast:         false,
-      includes:          EMPTY_ARRAY,
-      integration:       Integration::Null,
-      isolation:         Mutant::Isolation::Fork.new(
+      fail_fast:          false,
+      includes:           EMPTY_ARRAY,
+      integration:        Integration::Null,
+      isolation:          Mutant::Isolation::Fork.new(
         devnull: ->(&block) { File.open(File::NULL, File::WRONLY, &block) },
         stdout:  $stdout,
         stderr:  $stderr,
@@ -223,15 +228,17 @@ module Mutant
         marshal: Marshal,
         process: Process
       ),
-      jobs:              ::Parallel.processor_count,
-      kernel:            Kernel,
-      load_path:         $LOAD_PATH,
-      matcher:           Matcher::Config::DEFAULT,
-      open3:             Open3,
-      pathname:          Pathname,
-      requires:          EMPTY_ARRAY,
-      reporter:          Reporter::CLI.build($stdout),
-      zombie:            false
+      jobs:               Etc.nprocessors,
+      kernel:             Kernel,
+      load_path:          $LOAD_PATH,
+      matcher:            Matcher::Config::DEFAULT,
+      mutex:              Mutex,
+      open3:              Open3,
+      pathname:           Pathname,
+      reporter:           Reporter::CLI.build($stdout),
+      requires:           EMPTY_ARRAY,
+      thread:             Thread,
+      zombie:             false
     )
   end # Config
 end # Mutant

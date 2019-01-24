@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   # Namespace for mutant metadata
   module Meta
@@ -14,9 +16,11 @@ module Mutant
       # Add example
       #
       # @return [undefined]
-      def self.add(type, &block)
+      #
+      # rubocop:disable Performance/Caller
+      def self.add(*types, &block)
         file = caller.first.split(':in', 2).first
-        ALL << DSL.call(file, type, block)
+        ALL << DSL.call(file, Set.new(types), block)
       end
 
       Pathname.glob(Pathname.new(__dir__).parent.parent.join('meta', '*.rb'))

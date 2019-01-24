@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Mutant::Meta::Example.add :if do
   source 'if condition; true; else false; end'
 

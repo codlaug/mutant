@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 if ENV['COVERAGE'] == 'true'
   require 'simplecov'
 
@@ -42,7 +44,7 @@ module ParserHelper
   end
 
   def parse(string)
-    Unparser::Preprocessor.run(Parser::CurrentRuby.parse(string))
+    Unparser::Preprocessor.run(Unparser.parse(string))
   end
 
   def parse_expression(string)
@@ -50,18 +52,22 @@ module ParserHelper
   end
 end # ParserHelper
 
-module MessageHelper
-  def message(*arguments)
-    Mutant::Actor::Message.new(*arguments)
+module XSpecHelper
+  def verify_events
+    expectations = raw_expectations
+      .map(&XSpec::MessageExpectation.method(:parse))
+
+    XSpec::ExpectationVerifier.verify(self, expectations) do
+      yield
+    end
   end
-end # MessageHelper
+end # XSpecHelper
 
 RSpec.configure do |config|
   config.extend(SharedContext)
-  config.include(CompressHelper)
-  config.include(MessageHelper)
   config.include(ParserHelper)
   config.include(Mutant::AST::Sexp)
+  config.include(XSpecHelper)
 
   config.after(:suite) do
     $stderr = STDERR

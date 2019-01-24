@@ -1,33 +1,22 @@
+# frozen_string_literal: true
+
 module Mutant
   module AST
     # Regexp source mapper
     module Regexp
-      UNSUPPORTED_EXPRESSION_TYPE = :conditional
-
-      private_constant(*constants(false))
-
       # Parse regex string into expression
       #
       # @param regexp [String]
       #
-      # @return [Regexp::Expression]
+      # @return [Regexp::Expression, nil]
+      #
+      # rubocop:disable Lint/HandleExceptions
       def self.parse(regexp)
-        ::Regexp::Parser.parse(
-          regexp,
-          "ruby/#{RUBY_VERSION.split('.').first(2).join('.')}"
-        )
+        ::Regexp::Parser.parse(regexp)
+      # regexp_parser is more strict than MRI
+      rescue ::Regexp::Scanner::PrematureEndError
       end
-
-      # Check if expression is supported by mapper
-      #
-      # @param expression [Regexp::Expression]
-      #
-      # @return [Boolean]
-      def self.supported?(expression)
-        expression.terminal? || expression.all? do |subexp|
-          !subexp.type.equal?(UNSUPPORTED_EXPRESSION_TYPE) && supported?(subexp)
-        end
-      end
+      # rubocop:enable Lint/HandleExceptions
 
       # Convert expression into ast node
       #

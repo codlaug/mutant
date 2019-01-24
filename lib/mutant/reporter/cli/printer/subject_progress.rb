@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module Mutant
   class Reporter
     class CLI
       class Printer
         # Reporter for subject progress
         class SubjectProgress < self
-          FORMAT = '(%02d/%02d) %3d%% - killtime: %0.02fs runtime: %0.02fs overhead: %0.02fs'.freeze
+          FORMAT = '(%02d/%02d) %3d%% - killtime: %0.02fs runtime: %0.02fs overhead: %0.02fs'
 
           delegate(
             :tests,

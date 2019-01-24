@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Env
     # Bootstrap environment
@@ -6,13 +8,13 @@ module Mutant
 
       SEMANTICS_MESSAGE_FORMAT =
         "%<message>s. Fix your lib to follow normal ruby semantics!\n" \
-        '{Module,Class}#name should return resolvable constant name as String or nil'.freeze
+        '{Module,Class}#name should return resolvable constant name as String or nil'
 
       CLASS_NAME_RAISED_EXCEPTION =
-        '%<scope_class>s#name from: %<scope>s raised an error: %<exception>s'.freeze
+        '%<scope_class>s#name from: %<scope>s raised an error: %<exception>s'
 
       CLASS_NAME_TYPE_MISMATCH_FORMAT =
-        '%<scope_class>s#name from: %<scope>s returned %<name>s'.freeze
+        '%<scope_class>s#name from: %<scope>s returned %<name>s'
 
       private_constant(*constants(false))
 
@@ -34,6 +36,7 @@ module Mutant
         @parser = Parser.new
         infect
         initialize_matchable_scopes
+        @integration = config.integration.new(config).setup
       end
 
       # Print warning message
@@ -54,7 +57,6 @@ module Mutant
       def env
         subjects = matched_subjects
         Env.new(
-          actor_env:        Actor::Env.new(Thread),
           config:           config,
           integration:      integration,
           matchable_scopes: matchable_scopes,
@@ -99,7 +101,6 @@ module Mutant
       def infect
         config.includes.each(&config.load_path.method(:<<))
         config.requires.each(&config.kernel.method(:require))
-        @integration = config.integration.new(config).setup
       end
 
       # Matched subjects

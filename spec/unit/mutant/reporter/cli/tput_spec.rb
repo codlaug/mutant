@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Reporter::CLI::Tput do
   describe '.detect' do
     subject { described_class.detect }
 
     def expect_command(command, stdout, success)
-      allow(Open3).to receive(:capture3).with(command).ordered.and_return(
+      allow(Open3).to receive(:capture3).with(command).and_return(
         [
           stdout,
           instance_double(IO),

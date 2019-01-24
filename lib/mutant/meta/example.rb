@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 module Mutant
   module Meta
     class Example
-      include Adamantium, Anima.new(:file, :node, :node_type, :expected)
+      include Adamantium, Anima.new(:file, :node, :types, :expected)
 
       # Verification instance for example
       #
@@ -9,6 +11,7 @@ module Mutant
       def verification
         Verification.new(self, generated)
       end
+      memoize :verification
 
       # Normalized source
       #

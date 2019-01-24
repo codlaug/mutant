@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Reporter
     # Reporter that reports in human readable format

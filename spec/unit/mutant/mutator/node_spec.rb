@@ -1,13 +1,20 @@
-Mutant::Meta::Example::ALL.each.group_by(&:node_type).each do |type, examples|
-  RSpec.describe Mutant::Mutator::REGISTRY.lookup(type) do
-    toplevel_nodes = examples.map { |example| example.node.type }.uniq
+# frozen_string_literal: true
 
-    it "generates the correct mutations on #{toplevel_nodes} toplevel examples" do
+aggregate = Hash.new { |hash, key| hash[key] = [] }
+
+Mutant::Meta::Example::ALL
+  .each_with_object(aggregate) do |example, agg|
+    example.types.each do |type|
+      agg[Mutant::Mutator::REGISTRY.lookup(type)] << example
+    end
+  end
+
+aggregate.each do |mutator, examples|
+  RSpec.describe mutator do
+    it 'generates expected mutations' do
       examples.each do |example|
         verification = example.verification
-        unless verification.success?
-          fail verification.error_report
-        end
+        fail verification.error_report unless verification.success?
       end
     end
   end

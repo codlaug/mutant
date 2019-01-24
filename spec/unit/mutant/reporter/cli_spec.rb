@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Reporter::CLI do
   setup_shared_context
 
@@ -34,12 +36,12 @@ RSpec.describe Mutant::Reporter::CLI do
   def self.it_reports(expected_content)
     it 'writes expected report to output' do
       expect(subject).to be(object)
-      expect(contents).to eql(strip_indent(expected_content))
+      expect(contents).to eql(expected_content)
     end
   end
 
   before do
-    allow(Time).to receive(:now).and_return(Time.now)
+    allow(Mutant::Timer).to receive_messages(now: Mutant::Timer.now)
   end
 
   describe '.build' do
@@ -118,7 +120,7 @@ RSpec.describe Mutant::Reporter::CLI do
     context 'on progressive format' do
       let(:format) { progressive_format }
 
-      it_reports(<<-REPORT)
+      it_reports(<<~REPORT)
         Mutant configuration:
         Matcher:         #<Mutant::Matcher::Config empty>
         Integration:     Mutant::Integration::Null
@@ -136,7 +138,7 @@ RSpec.describe Mutant::Reporter::CLI do
   describe '#report' do
     subject { object.report(env_result) }
 
-    it_reports(<<-REPORT)
+    it_reports(<<~REPORT)
       Mutant configuration:
       Matcher:         #<Mutant::Matcher::Config empty>
       Integration:     Mutant::Integration::Null
@@ -162,7 +164,7 @@ RSpec.describe Mutant::Reporter::CLI do
     context 'on framed format' do
       let(:format) { framed_format }
 
-      it_reports(<<-REPORT)
+      it_reports(<<~REPORT)
         [tput-restore]Mutant configuration:
         Matcher:         #<Mutant::Matcher::Config empty>
         Integration:     Mutant::Integration::Null
@@ -191,7 +193,7 @@ RSpec.describe Mutant::Reporter::CLI do
 
         let(:tty?) { true }
 
-        it_reports Mutant::Color::GREEN.format('(00/02) 100% - killtime: 0.00s runtime: 4.00s overhead: 4.00s') << "\n"
+        it_reports Mutant::Color::GREEN.format('(00/02) 100% - killtime: 0.00s runtime: 4.00s overhead: 4.00s') + "\n"
       end
 
       context 'with last mutation present' do

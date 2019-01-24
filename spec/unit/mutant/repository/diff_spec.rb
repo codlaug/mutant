@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 describe Mutant::Repository::Diff do
   describe '#touches?' do
     let(:object) do
@@ -28,6 +30,7 @@ describe Mutant::Repository::Diff do
 
     shared_context 'test if git tracks the file' do
       before do
+        # rubocop:disable Lint/UnneededSplatExpansion
         expect(config.kernel).to receive(:system)
           .ordered
           .with(
@@ -72,7 +75,7 @@ describe Mutant::Repository::Diff do
       end
 
       let(:expected_git_log_command) do
-        %W[git log from_rev...to_rev -L 1,2:#{path}]
+        %W[git log from_rev...to_rev --ignore-all-space -L 1,2:#{path}]
       end
 
       context 'on failure of git log command' do

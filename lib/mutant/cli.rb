@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   # Commandline parser / runner
   class CLI
@@ -64,8 +66,6 @@ module Mutant
     #
     # @return [undefined]
     def parse_match_expressions(expressions)
-      fail Error, 'No expressions given' if expressions.empty?
-
       expressions.each do |expression|
         add_matcher(:match_expressions, config.expression_parser.(expression))
       end

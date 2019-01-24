@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   module Repository
     # Error raised on repository interaction problems
@@ -22,12 +24,12 @@ module Mutant
     class Diff
       include Adamantium, Anima.new(:config, :from, :to)
 
-      HEAD = 'HEAD'.freeze
+      HEAD = 'HEAD'
 
       # Test if diff changes file at line range
       #
       # @param [Pathname] path
-      # @param [Range<Fixnum>] line_range
+      # @param [Range<Integer>] line_range
       #
       # @return [Boolean]
       #
@@ -39,6 +41,7 @@ module Mutant
         command = %W[
           git log
           #{from}...#{to}
+          --ignore-all-space
           -L #{line_range.begin},#{line_range.end}:#{path}
         ]
 

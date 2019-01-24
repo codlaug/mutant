@@ -1,14 +1,14 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Matcher::Methods::Instance, '#call' do
   let(:object) { described_class.new(class_under_test) }
   let(:env)    { Fixtures::TEST_ENV                    }
 
   let(:class_under_test) do
     parent = Module.new do
-      def method_d
-      end
+      def method_d; end
 
-      def method_e
-      end
+      def method_e; end
     end
 
     Class.new do
@@ -16,18 +16,15 @@ RSpec.describe Mutant::Matcher::Methods::Instance, '#call' do
 
       private :method_d
 
-      def method_a
-      end
+      def method_a; end
 
     protected
 
-      def method_b
-      end
+      def method_b; end
 
     private
 
-      def method_c
-      end
+      def method_c; end
     end
   end
 

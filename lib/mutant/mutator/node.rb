@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
 
   # Generator for mutations
@@ -14,7 +16,7 @@ module Mutant
       #
       # @param [Parser::AST::Node] node
       #
-      # @param [Fixnum] index
+      # @param [Integer] index
       #
       # @return [undefined]
       def self.define_named_child(name, index)
@@ -51,7 +53,7 @@ module Mutant
 
       # Dispatch on child index
       #
-      # @param [Fixnum] index
+      # @param [Integer] index
       #
       # @return [undefined]
       def mutate_child(index, &block)
@@ -64,7 +66,7 @@ module Mutant
 
       # Emit delete child mutation
       #
-      # @param [Fixnum] index
+      # @param [Integer] index
       #
       # @return [undefined]
       def delete_child(index)
@@ -75,7 +77,7 @@ module Mutant
 
       # Emit updated child
       #
-      # @param [Fixnum] index
+      # @param [Integer] index
       # @param [Parser::AST::Node] node
       #
       # @return [undefined]
@@ -92,6 +94,13 @@ module Mutant
       # @return [undefined]
       def emit_type(*children)
         emit(::Parser::AST::Node.new(node.type, children))
+      end
+
+      # Emit propagation if node can stand alone
+      #
+      # @return [undefined]
+      def emit_propagation(node)
+        emit(node) unless AST::Types::NOT_STANDALONE.include?(node.type)
       end
 
       # Emit singleton literals
@@ -124,7 +133,7 @@ module Mutant
       # @return [nil]
       #   otherwise
       def parent_node
-        parent.node if parent
+        parent&.node
       end
 
       # Parent type
@@ -135,7 +144,7 @@ module Mutant
       # @return [nil]
       #   otherwise
       def parent_type
-        parent_node.type if parent_node
+        parent_node&.type
       end
 
       # Test if the node is the left of an or_asgn or op_asgn
@@ -149,7 +158,7 @@ module Mutant
       #
       # @param [Range] range
       #
-      # @return [Enumerable<Fixnum>]
+      # @return [Enumerable<Integer>]
       def children_indices(range)
         range.begin.upto(children.length + range.end)
       end

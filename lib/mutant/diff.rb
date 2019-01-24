@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 module Mutant
   # Class to create diffs from source code
   class Diff
     include Adamantium::Flat, Concord.new(:old, :new)
 
-    ADDITION = '+'.freeze
-    DELETION = '-'.freeze
-    NEWLINE  = "\n".freeze
+    ADDITION = '+'
+    DELETION = '-'
+    NEWLINE  = "\n"
 
     # Unified source diff between old and new
     #
@@ -17,7 +19,7 @@ module Mutant
     def diff
       return if diffs.empty?
 
-      minimized_hunk.diff(:unified) << NEWLINE
+      minimized_hunk.diff(:unified) + NEWLINE
     end
     memoize :diff
 
@@ -68,7 +70,7 @@ module Mutant
     # @return [Array<Diff::LCS::Hunk>]
     def hunks
       diffs.map do |diff|
-        ::Diff::LCS::Hunk.new(old, new, diff, max_length, 0)
+        ::Diff::LCS::Hunk.new(old.map(&:dup), new, diff, max_length, 0)
       end
     end
 
@@ -86,7 +88,7 @@ module Mutant
 
     # Max length of source line in new and old
     #
-    # @return [Fixnum]
+    # @return [Integer]
     def max_length
       [old, new].map(&:length).max
     end

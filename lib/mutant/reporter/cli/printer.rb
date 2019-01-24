@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Reporter
     class CLI
@@ -33,7 +35,7 @@ module Mutant
 
         delegate :success?
 
-        NL = "\n".freeze
+        NL = "\n"
 
         # Run printer
         #

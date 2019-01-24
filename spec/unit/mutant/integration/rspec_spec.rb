@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'mutant/integration/rspec'
 
 RSpec.describe Mutant::Integration::Rspec do
@@ -124,7 +126,7 @@ RSpec.describe Mutant::Integration::Rspec do
       .and_return(rspec_runner)
 
     expect(RSpec).to receive_messages(world: world)
-    allow(Time).to receive_messages(now: Time.now)
+    allow(Mutant::Timer).to receive_messages(now: Mutant::Timer.now)
   end
 
   describe '#all_tests' do

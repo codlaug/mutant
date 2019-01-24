@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Mutator
     class Node
@@ -9,7 +11,7 @@ module Mutant
 
           children :value
 
-          PREFIX = '__mutant__'.freeze
+          PREFIX = '__mutant__'
 
         private
 

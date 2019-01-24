@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Expression
     # Abstract base class for expressions matching namespaces
@@ -40,9 +42,11 @@ module Mutant
         #
         # @param [Expression] expression
         #
-        # @return [Fixnum]
+        # @return [Integer]
         def match_length(expression)
-          if @recursion_pattern =~ expression.syntax
+          if eql?(expression)
+            syntax.length
+          elsif @recursion_pattern.match?(expression.syntax)
             scope_name.length
           else
             0

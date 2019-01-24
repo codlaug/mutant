@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Subject::Method::Instance do
   let(:object)  { described_class.new(context, node) }
 
@@ -20,8 +22,7 @@ RSpec.describe Mutant::Subject::Method::Instance do
         @bar = :boo
       end
 
-      def foo
-      end
+      def foo; end
 
       def self.name
         'Test'
@@ -84,8 +85,7 @@ RSpec.describe Mutant::Subject::Method::Instance::Memoized do
     let(:scope) do
       Class.new do
         include Memoizable
-        def foo
-        end
+        def foo; end
         memoize :foo
       end
     end
@@ -121,12 +121,12 @@ RSpec.describe Mutant::Subject::Method::Instance::Memoized do
         Mutant::Mutation::Evil.new(
           object,
           s(:begin,
-            s(:def, :foo, s(:args), nil), s(:send, nil, :memoize, s(:args, s(:sym, :foo))))
+            s(:def, :foo, s(:args), s(:zsuper)), s(:send, nil, :memoize, s(:args, s(:sym, :foo))))
         ),
         Mutant::Mutation::Evil.new(
           object,
           s(:begin,
-            s(:send, nil, :remove_method, s(:sym, :foo)), s(:send, nil, :memoize, s(:args, s(:sym, :foo))))
+            s(:def, :foo, s(:args), nil), s(:send, nil, :memoize, s(:args, s(:sym, :foo))))
         )
       ]
     end

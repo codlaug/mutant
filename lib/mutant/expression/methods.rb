@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Expression
 
@@ -37,7 +39,7 @@ module Mutant
       #
       # @param [Expression] expression
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def match_length(expression)
         if expression.syntax.start_with?(syntax)
           syntax.length

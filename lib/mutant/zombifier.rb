@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   # Zombifier namespace
   class Zombifier
@@ -113,7 +115,7 @@ module Mutant
     #
     # @return [Parser::AST::Node]
     def namespaced_node(source_path)
-      s(:module, s(:const, nil, namespace), ::Parser::CurrentRuby.parse(source_path.read))
+      s(:module, s(:const, nil, namespace), Unparser.parse(source_path.read))
     end
 
   end # Zombifier

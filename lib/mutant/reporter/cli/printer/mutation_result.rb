@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Reporter
     class CLI
@@ -7,10 +9,7 @@ module Mutant
         # :reek:TooManyConstants
         class MutationResult < self
 
-          delegate :mutation, :test_result
-
-          DIFF_ERROR_MESSAGE =
-            'BUG: Mutation NOT resulted in exactly one diff hunk. Please report a reproduction!'.freeze
+          delegate :mutation, :isolation_result
 
           MAP = {
             Mutant::Mutation::Evil    => :evil_details,
@@ -18,35 +17,38 @@ module Mutant
             Mutant::Mutation::Noop    => :noop_details
           }.freeze
 
-          NEUTRAL_MESSAGE =
-            "--- Neutral failure ---\n" \
-            "Original code was inserted unmutated. And the test did NOT PASS.\n" \
-            "Your tests do not pass initially or you found a bug in mutant / unparser.\n" \
-            "Subject AST:\n" \
-            "%s\n" \
-            "Unparsed Source:\n" \
-            "%s\n" \
-            "Test Result:\n".freeze
+          NEUTRAL_MESSAGE = <<~'MESSAGE'
+            --- Neutral failure ---
+            Original code was inserted unmutated. And the test did NOT PASS.
+            Your tests do not pass initially or you found a bug in mutant / unparser.
+            Subject AST:
+            %s
+            Unparsed Source:
+            %s
+          MESSAGE
 
-          NO_DIFF_MESSAGE =
-            "--- Internal failure ---\n" \
-            "BUG: Mutation NOT resulted in exactly one diff hunk. Please report a reproduction!\n" \
-            "Original unparsed source:\n" \
-            "%s\n" \
-            "Original AST:\n" \
-            "%s\n" \
-            "Mutated unparsed source:\n" \
-            "%s\n" \
-            "Mutated AST:\n" \
-            "%s\n".freeze
+          NO_DIFF_MESSAGE = <<~'MESSAGE'
+            --- Internal failure ---
+            BUG: A generted mutation did not result in exactly one diff hunk!
+            This is an invariant violation by the mutation generation engine.
+            Please report a reproduction to https://github.com/mbj/mutant
+            Original unparsed source:
+            %s
+            Original AST:
+            %s
+            Mutated unparsed source:
+            %s
+            Mutated AST:
+            %s
+          MESSAGE
 
-          NOOP_MESSAGE    =
-            "---- Noop failure -----\n" \
-            "No code was inserted. And the test did NOT PASS.\n" \
-            "This is typically a problem of your specs not passing unmutated.\n" \
-            "Test Result:\n".freeze
+          NOOP_MESSAGE = <<~'MESSAGE'
+            ---- Noop failure -----
+            No code was inserted. And the test did NOT PASS.
+            This is typically a problem of your specs not passing unmutated.
+          MESSAGE
 
-          FOOTER = '-----------------------'.freeze
+          FOOTER = '-----------------------'
 
           # Run report printer
           #
@@ -64,6 +66,8 @@ module Mutant
           # @return [undefined]
           def print_details
             __send__(MAP.fetch(mutation.class))
+
+            visit_isolation_result unless isolation_result.success?
           end
 
           # Evil mutation details
@@ -97,7 +101,6 @@ module Mutant
           # @return [String]
           def noop_details
             info(NOOP_MESSAGE)
-            visit_test_result
           end
 
           # Neutral details
@@ -105,14 +108,13 @@ module Mutant
           # @return [String]
           def neutral_details
             info(NEUTRAL_MESSAGE, original_node.inspect, mutation.source)
-            visit_test_result
           end
 
           # Visit failed test results
           #
           # @return [undefined]
-          def visit_test_result
-            visit(TestResult, test_result)
+          def visit_isolation_result
+            visit(IsolationResult, isolation_result)
           end
 
           # Original node

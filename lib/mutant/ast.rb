@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   # AST helpers
   module AST

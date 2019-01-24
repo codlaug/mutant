@@ -1,16 +1,18 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Loader, '.call' do
   subject do
     described_class.call(
       binding: binding,
       kernel:  kernel,
-      node:    node,
+      source:  source,
       subject: mutation_subject
     )
   end
 
   let(:path)     { instance_double(Pathname, to_s: path_str) }
   let(:path_str) { instance_double(String)                   }
-  let(:line)     { instance_double(Fixnum)                   }
+  let(:line)     { instance_double(0.class)                  }
   let(:kernel)   { class_double(Kernel)                      }
   let(:binding)  { instance_double(Binding)                  }
   let(:source)   { instance_double(String)                   }
@@ -25,13 +27,9 @@ RSpec.describe Mutant::Loader, '.call' do
   end
 
   it 'performs expected kernel interaction' do
-    expect(Unparser).to receive(:unparse)
-      .with(node)
-      .and_return(source)
-
     expect(kernel).to receive(:eval)
       .with(
-        source,
+        "# frozen_string_literal: true\n#[InstanceDouble(String) (anonymous)]",
         binding,
         path_str,
         line

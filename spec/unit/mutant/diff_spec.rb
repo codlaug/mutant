@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Diff do
   let(:object) { described_class }
 
@@ -55,7 +57,7 @@ RSpec.describe Mutant::Diff do
       let(:new) { %w[baz bar baz] }
 
       let(:expectation) do
-        strip_indent(<<-STR)
+        <<~STR
           @@ -1,4 +1,4 @@
           -foo
           +baz
@@ -75,7 +77,7 @@ RSpec.describe Mutant::Diff do
       let(:new) { %w[baz bar] }
 
       let(:expectation) do
-        strip_indent(<<-STR)
+        <<~STR
           @@ -1,3 +1,3 @@
           -foo
           +baz
@@ -93,7 +95,7 @@ RSpec.describe Mutant::Diff do
       let(:new) { %w[foo baz bar] }
 
       let(:expectation) do
-        strip_indent(<<-STR)
+        <<~STR
           @@ -1,3 +1,4 @@
            foo
           +baz
@@ -111,7 +113,7 @@ RSpec.describe Mutant::Diff do
       let(:new) { %w[foo bar baz boz a b c other] }
 
       let(:expectation) do
-        strip_indent(<<-STR)
+        <<~STR
           @@ -1,8 +1,9 @@
            foo
            bar
@@ -134,7 +136,7 @@ RSpec.describe Mutant::Diff do
       let(:new) { %w[foo bar baz boz a b c]       }
 
       let(:expectation) do
-        strip_indent(<<-STR)
+        <<~STR
           @@ -1,9 +1,8 @@
           -other
            foo
@@ -157,7 +159,7 @@ RSpec.describe Mutant::Diff do
       let(:new) { %w[other foo bar baz boz a b c] }
 
       let(:expectation) do
-        strip_indent(<<-STR)
+        <<~STR
           @@ -1,8 +1,9 @@
           +other
            foo

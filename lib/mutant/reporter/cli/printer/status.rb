@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Reporter
     class CLI
@@ -7,8 +9,8 @@ module Mutant
 
           delegate(:active_jobs, :payload)
 
-          ACTIVE_JOB_HEADER = 'Active Jobs:'.freeze
-          ACTIVE_JOB_FORMAT = '%d: %s'.freeze
+          ACTIVE_JOB_HEADER = 'Active Jobs:'
+          ACTIVE_JOB_FORMAT = '%d: %s'
 
           # Print progress for collector
           #

@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module Mutant
   # Stream filter for warnings
   class WarningFilter
     include Equalizer.new(:target)
 
-    WARNING_PATTERN = /\A(?:.+):(?:\d+): warning: (?:.+)\n\z/
+    WARNING_PATTERN = /\A(?:.+):(?:\d+): warning: (?:.+)\n\z/.freeze
 
     # Initialize object
     #
@@ -34,7 +36,7 @@ module Mutant
     #
     # @return [self]
     def write(message)
-      if WARNING_PATTERN =~ message
+      if WARNING_PATTERN.match?(message)
         warnings << message
       else
         target.write(message)

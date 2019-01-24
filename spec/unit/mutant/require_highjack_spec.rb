@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::RequireHighjack do
   let(:highjacked_calls) { [] }
   let(:require_calls)    { [] }

@@ -1,6 +1,9 @@
-require 'morpher'
+# frozen_string_literal: true
+
 require 'anima'
+require 'morpher'
 require 'mutant'
+require 'parallel'
 
 # @api private
 module MutantSpec
@@ -11,8 +14,7 @@ module MutantSpec
   # rubocop:disable MethodLength
   module Corpus
     TMP                 = ROOT.join('tmp').freeze
-    EXCLUDE_GLOB_FORMAT = '{%s}'.freeze
-    RUBY_GLOB_PATTERN   = '**/*.rb'.freeze
+    EXCLUDE_GLOB_FORMAT = '{%s}'
 
     # Not in the docs. Number from chatting with their support.
     # 2 processors allocated per container, 4 processes works well.
@@ -25,9 +27,9 @@ module MutantSpec
     class Project
       MUTEX = Mutex.new
 
-      MUTATION_GENERATION_MESSAGE = 'Total Mutations/Time/Parse-Errors: %s/%0.2fs - %0.2f/s'.freeze
-      START_MESSAGE               = 'Starting - %s'.freeze
-      FINISH_MESSAGE              = 'Mutations - %4i - %s'.freeze
+      MUTATION_GENERATION_MESSAGE = 'Total Mutations/Time/Parse-Errors: %s/%0.2fs - %0.2f/s'
+      START_MESSAGE               = 'Starting - %s'
+      FINISH_MESSAGE              = 'Mutations - %4i - %s'
 
       DEFAULT_MUTATION_COUNT = 0
 
@@ -35,9 +37,13 @@ module MutantSpec
         :expected_errors,
         :mutation_coverage,
         :mutation_generation,
+        :integration,
         :name,
         :namespace,
-        :repo_uri
+        :repo_uri,
+        :repo_ref,
+        :ruby_glob_pattern,
+        :exclude
       )
 
       # Verify mutation coverage
@@ -54,13 +60,24 @@ module MutantSpec
             system(
               %W[
                 bundle exec mutant
-                --use rspec
+                --use #{integration}
                 --include lib
                 --require #{name}
                 #{namespace}*
-              ]
+              ] + concurrency_limits
             )
           end
+        end
+      end
+
+      # The concurrency limits, if any
+      #
+      # @return [Array<String>]
+      def concurrency_limits
+        if ENV.key?('MUTANT_JOBS')
+          %W[--jobs #{ENV.fetch('MUTANT_JOBS')}]
+        else
+          []
         end
       end
 
@@ -73,7 +90,7 @@ module MutantSpec
       #   otherwise
       def verify_mutation_generation
         checkout
-        start = Time.now
+        start = Mutant::Timer.now
 
         options = {
           finish:       method(:finish),
@@ -81,10 +98,10 @@ module MutantSpec
           in_processes: parallel_processes
         }
 
-        total = Parallel.map(effective_ruby_paths, options, &method(:count_mutations_and_check_errors))
+        total = Parallel.map(effective_ruby_paths, options, &method(:check_generation))
           .inject(DEFAULT_MUTATION_COUNT, :+)
 
-        took = Time.now - start
+        took = Mutant::Timer.now - start
         puts MUTATION_GENERATION_MESSAGE % [total, took, total / took]
         self
       end
@@ -95,18 +112,23 @@ module MutantSpec
       def checkout
         return self if noinstall?
         TMP.mkdir unless TMP.directory?
+
         if repo_path.exist?
           Dir.chdir(repo_path) do
             system(%w[git fetch origin])
-            system(%w[git reset --hard])
-            system(%w[git clean -f -d -x])
-            system(%w[git checkout origin/master])
             system(%w[git reset --hard])
             system(%w[git clean -f -d -x])
           end
         else
           system(%W[git clone #{repo_uri} #{repo_path}])
         end
+
+        Dir.chdir(repo_path) do
+          system(%W[git checkout #{repo_ref}])
+          system(%w[git reset --hard])
+          system(%w[git clean -f -d -x])
+        end
+
         self
       end
       memoize :checkout
@@ -117,34 +139,50 @@ module MutantSpec
       #
       # @param path [Pathname] path responsible for exception
       #
-      # @return [Fixnum] mutations generated
-      def count_mutations_and_check_errors(path)
+      # @return [Integer] mutations generated
+      def check_generation(path)
         relative_path = path.relative_path_from(repo_path)
 
-        count = count_mutations(path)
+        node = Parser::CurrentRuby.parse(path.read)
+        fail "Cannot parse: #{path}" unless node
+
+        mutations = Mutant::Mutator.mutate(node)
+
+        mutations.each do |mutation|
+          check_generation_invariants(node, mutation)
+        end
 
         expected_errors.assert_success(relative_path)
 
-        count
+        mutations.length
       rescue Exception => exception # rubocop:disable Lint/RescueException
         expected_errors.assert_error(relative_path, exception)
 
         DEFAULT_MUTATION_COUNT
       end
 
-      # Count mutations generated for provided source file
+      # Check generation invariants
       #
-      # @param path [Pathname] path to a source file
+      # @param [Parser::AST::Node] original
+      # @param [Parser::AST::Node] mutation
       #
-      # @raise [Exception] any error specified by integrations.yml
+      # @return [undefined]
       #
-      # @return [Fixnum] number of mutations generated
-      def count_mutations(path)
-        node = Parser::CurrentRuby.parse(path.read)
+      # @raise [Exception]
+      def check_generation_invariants(original, mutation)
+        return unless ENV['MUTANT_CORPUS_EXPENSIVE']
 
-        return DEFAULT_MUTATION_COUNT unless node
+        original_source = Unparser.unparse(original)
+        mutation_source = Unparser.unparse(mutation)
 
-        Mutant::Mutator.mutate(node).length
+        Mutant::Diff.build(original_source, mutation_source) and return
+
+        fail Mutant::Reporter::CLI::NO_DIFF_MESSAGE % [
+          original_source,
+          original.inspect,
+          mutation_source,
+          mutation.inspect
+        ]
       end
 
       # Install mutant
@@ -156,6 +194,7 @@ module MutantSpec
         repo_path.join('Gemfile').open('a') do |file|
           file << "gem 'mutant', path: '#{relative}'\n"
           file << "gem 'mutant-rspec', path: '#{relative}'\n"
+          file << "gem 'mutant-minitest', path: '#{relative}'\n"
           file << "eval_gemfile File.expand_path('#{relative.join('Gemfile.shared')}')\n"
         end
         lockfile = repo_path.join('Gemfile.lock')
@@ -168,19 +207,20 @@ module MutantSpec
       # @return [Array<Pathname>]
       def effective_ruby_paths
         Pathname
-          .glob(repo_path.join(RUBY_GLOB_PATTERN))
+          .glob(repo_path.join(ruby_glob_pattern))
           .sort_by(&:size)
           .reverse
+          .reject { |path| exclude.include?(path.relative_path_from(repo_path).to_s) }
       end
 
       # Number of parallel processes to use
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def parallel_processes
         if ENV.key?('CI')
           CIRCLE_CI_CONTAINER_PROCESSES
         else
-          Parallel.processor_count
+          Etc.nprocessors
         end
       end
 
@@ -201,7 +241,7 @@ module MutantSpec
       # Print start progress
       #
       # @param [Pathname] path
-      # @param [Fixnum] _index
+      # @param [Integer] _index
       #
       # @return [undefined]
       #
@@ -214,8 +254,8 @@ module MutantSpec
       # Print finish progress
       #
       # @param [Pathname] path
-      # @param [Fixnum] _index
-      # @param [Fixnum] count
+      # @param [Integer] _index
+      # @param [Integer] count
       #
       # @return [undefined]
       #
@@ -243,7 +283,7 @@ module MutantSpec
       # Mapping of files which we expect to cause errors during mutation generation
       class ErrorWhitelist
         class UnnecessaryExpectation < StandardError
-          MESSAGE = 'Expected to encounter %s while mutating "%s"'.freeze
+          MESSAGE = 'Expected to encounter %s while mutating "%s"'
 
           def initialize(*error_info)
             super(MESSAGE % error_info)
@@ -300,8 +340,11 @@ module MutantSpec
               s(:guard, s(:primitive, Hash)),
               s(:hash_transform,
                 s(:key_symbolize, :repo_uri,            s(:guard, s(:primitive, String))),
+                s(:key_symbolize, :repo_ref,            s(:guard, s(:primitive, String))),
+                s(:key_symbolize, :ruby_glob_pattern,   s(:guard, s(:primitive, String))),
                 s(:key_symbolize, :name,                s(:guard, s(:primitive, String))),
                 s(:key_symbolize, :namespace,           s(:guard, s(:primitive, String))),
+                s(:key_symbolize, :integration,         s(:guard, s(:primitive, String))),
                 s(:key_symbolize, :mutation_coverage,
                   s(:guard, s(:or, s(:primitive, TrueClass), s(:primitive, FalseClass)))),
                 s(:key_symbolize, :mutation_generation,
@@ -314,7 +357,8 @@ module MutantSpec
                         ->(hash) { hash.map { |key, values| [key, values.map(&Pathname.method(:new))] }.to_h },
                         ->(hash) { hash.map { |key, values| [key, values.map(&:to_s)]                 }.to_h }
                       ]),
-                    s(:load_attribute_hash, s(:param, ErrorWhitelist))))),
+                    s(:load_attribute_hash, s(:param, ErrorWhitelist)))),
+                s(:key_symbolize, :exclude, s(:map, s(:guard, s(:primitive, String))))),
               s(:anima_load, Project))))
       end
 

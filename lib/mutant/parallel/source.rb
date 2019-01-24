@@ -1,8 +1,14 @@
+# frozen_string_literal: true
+
 module Mutant
   module Parallel
     # Job source for parallel execution
     class Source
       include AbstractType
+
+      class Job
+        include Adamantium, Anima.new(:index, :payload)
+      end
 
       NoJobError = Class.new(RuntimeError)
 
@@ -41,13 +47,13 @@ module Mutant
 
         # Next job
         #
-        # @return [Object]
+        # @return [Job]
         #
         # @raise [NoJobError]
         #   when no next job is available
         def next
           fail NoJobError unless next?
-          jobs.fetch(@next_index).tap do
+          Job.new(index: @next_index, payload: jobs.fetch(@next_index)).tap do
             @next_index += 1
           end
         end

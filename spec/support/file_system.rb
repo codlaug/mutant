@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MutantSpec
   class FileState
     DEFAULTS = IceNine.deep_freeze(

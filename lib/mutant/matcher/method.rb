@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Matcher
     # Abstract base class for method matchers
@@ -11,10 +13,10 @@ module Mutant
       BLACKLIST = %r{\A(kernel/|\(eval\)\z)}.freeze
 
       SOURCE_LOCATION_WARNING_FORMAT =
-        '%s does not have a valid source location, unable to emit subject'.freeze
+        '%s does not have a valid source location, unable to emit subject'
 
       CLOSURE_WARNING_FORMAT =
-        '%s is dynamically defined in a closure, unable to emit subject'.freeze
+        '%s is dynamically defined in a closure, unable to emit subject'
 
       # Matched subjects
       #
@@ -91,14 +93,14 @@ module Mutant
 
         # Source file line
         #
-        # @return [Fixnum]
+        # @return [Integer]
         def source_line
           source_location.last
         end
 
         # Full source location
         #
-        # @return [Array{String,Fixnum}]
+        # @return [Array{String,Integer}]
         def source_location
           target_method.source_location
         end

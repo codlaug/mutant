@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Mutant::Meta::Example.add :rescue do
   source 'begin; rescue ExceptionA, ExceptionB => error; true; end'
 
@@ -75,7 +77,8 @@ Mutant::Meta::Example.add :rescue do
   # Failing body
   mutation 'def a; raise; end'
 
-  mutation 'remove_method :a'
+  # Superclass implementation
+  mutation 'def a; super; end'
 end
 
 Mutant::Meta::Example.add :rescue do

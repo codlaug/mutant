@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Mutator
     class Node
@@ -14,6 +16,7 @@ module Mutant
           emit_optarg_body_assignments
           emit_restarg_body_mutation
           emit_body(N_RAISE)
+          emit_body(N_ZSUPER)
           emit_body(nil)
           emit_body_mutations if body
         end
@@ -60,20 +63,6 @@ module Mutant
 
           children :name, :arguments, :body
 
-          # Emit mutations
-          #
-          # @return [undefined]
-          def dispatch
-            super()
-            emit_remove_method
-          end
-
-          # Remove an instance method
-          #
-          # @return [undefined]
-          def emit_remove_method
-            emit(s(:send, nil, :remove_method, s(:sym, name)))
-          end
         end # Instance
 
         # Mutator for singleton method defines

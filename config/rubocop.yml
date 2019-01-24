@@ -19,7 +19,7 @@ CollectionMethods:
     find_all: 'select'
 
 AccessModifierIndentation:
-  EnforcedStyle: outdent
+  Enabled: false
 
 # Limit line length
 LineLength:
@@ -96,7 +96,7 @@ SymbolArray:
 
 # Align if/else blocks with the variable assignment
 EndAlignment:
-  AlignWith: variable
+  EnforcedStyleAlignWith: variable
 
 # Prefer #kind_of? over #is_a?
 ClassCheck:
@@ -109,6 +109,9 @@ UnneededPercentQ:
 # Allow a maximum ABC score
 Metrics/AbcSize:
   Max: 21.02
+
+Metrics/BlockLength:
+  Enabled: false
 
 # Do not prefer lambda.call(...) over lambda.(...)
 LambdaCall:
@@ -147,10 +150,6 @@ SignalException:
 Alias:
   EnforcedStyle: prefer_alias_method
 
-# Teaching people to ignore singleton class is pointless
-RedundantFreeze:
-  Enabled: false
-
 # Do not waste my horizontal or vertical space
 IndentArray:
   Enabled: false
@@ -170,10 +169,34 @@ IndentArray:
 MultilineMethodCallIndentation:
   EnforcedStyle: indented
 
-# Align keys and values in a multiline hash
-AlignHash:
-  EnforcedColonStyle: table
-
 # Prefer `public_send` and `__send__` over `send`
 Send:
   Enabled: true
+
+Layout/AlignHash:
+  EnforcedColonStyle: table
+  EnforcedHashRocketStyle: table
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: false
+Lint/BooleanSymbol:
+  Enabled: false
+Lint/InterpolationCheck:
+  Enabled: false
+Lint/MissingCopEnableDirective:
+  Enabled: false
+Lint/UnifiedInteger:
+  Enabled: false
+Naming/FileName:
+  Enabled: false
+Style/AccessModifierDeclarations:
+  Enabled: false
+Style/CommentedKeyword:
+  Enabled: false
+Style/MixinGrouping:
+  Enabled: false
+Style/RescueStandardError:
+  Enabled: false
+Style/StderrPuts:
+  Enabled: false

@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module XSpec
   class MessageReaction
     include Concord.new(:event_list)
 
     TERMINATE_EVENTS = IceNine.deep_freeze(%i[return exception].to_set)
-    VALID_EVENTS     = IceNine.deep_freeze(%i[return exception yields].to_set)
+    VALID_EVENTS     = IceNine.deep_freeze(%i[return execute exception yields].to_set)
 
     private_constant(*constants(false))
 
@@ -26,11 +28,15 @@ module XSpec
 
   private
 
-    def return(_, value)
+    def return(_event, value)
       value
     end
 
-    def exception(_, exception)
+    def execute(_event, block)
+      block.call
+    end
+
+    def exception(_event, exception)
       fail exception
     end
 
@@ -77,9 +83,9 @@ module XSpec
     private_class_method :assert_not_empty
 
     def self.assert_total(event_list)
-      if event_list[0..-2].map(&:first).any?(&TERMINATE_EVENTS.method(:include?))
-        fail "Reaction not total: #{event_list}"
-      end
+      return unless event_list[0..-2].map(&:first).any?(&TERMINATE_EVENTS.method(:include?))
+
+      fail "Reaction not total: #{event_list}"
     end
     private_class_method :assert_total
   end # MessageReaction
@@ -138,7 +144,7 @@ module XSpec
     include Concord.new(:expectations)
 
     def call(observation)
-      expectation = expectations.shift or fail "No expected message but observed #{observation}"
+      expectation = expectations.shift or fail "No expected message but observed #{observation.inspect}"
       expectation.call(observation)
     end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   # Subject of a mutation
   class Subject
@@ -33,7 +35,7 @@ module Mutant
 
     # Source line range
     #
-    # @return [Range<Fixnum>]
+    # @return [Range<Integer>]
     def source_lines
       expression = node.location.expression
       expression.line..expression.source_buffer.decompose_position(expression.end_pos).first
@@ -42,7 +44,7 @@ module Mutant
 
     # First source line
     #
-    # @return [Fixnum]
+    # @return [Integer]
     def source_line
       source_lines.begin
     end

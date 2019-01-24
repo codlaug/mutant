@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   module AST
     # Node meta information mixin
@@ -7,7 +9,7 @@ module Mutant
       class Optarg
         include NamedChildren, Concord.new(:node)
 
-        UNDERSCORE = '_'.freeze
+        UNDERSCORE = '_'
 
         children :name, :default_value
 

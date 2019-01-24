@@ -1,7 +1,19 @@
-RSpec.describe Mutant::AST::Regexp, '.parse' do
-  before { stub_const('RUBY_VERSION', '2.3.9') }
+# frozen_string_literal: true
 
-  it 'parses using minor ruby version' do
-    expect(described_class.parse(/foo/).to_re).to eql(/foo/)
+RSpec.describe Mutant::AST::Regexp, '.parse' do
+  def apply(input)
+    described_class.parse(input)
+  end
+
+  context 'on regexp regexp_parser does accept' do
+    it 'parses using minor ruby version' do
+      expect(apply(/foo/).to_re).to eql(/foo/)
+    end
+  end
+
+  context 'on regexp regexp_parser does not accept' do
+    it 'returns nil' do
+      expect(apply(/u{/)).to be(nil)
+    end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Mutator
     class Node
@@ -6,6 +8,8 @@ module Mutant
         class Array < self
 
           handle(:array)
+
+          children :first
 
         private
 
@@ -17,7 +21,7 @@ module Mutant
             emit_type
             mutate_body
             return unless children.one?
-            emit(children.first)
+            emit(first) unless n_splat?(first)
           end
 
           # Mutate body

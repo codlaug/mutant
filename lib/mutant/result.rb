@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   # Namespace and mixin module for results
   module Result
@@ -94,16 +96,24 @@ module Mutant
 
       # Amount of mutations
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def amount_mutations
         env.mutations.length
       end
 
       # Amount of subjects
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def amount_subjects
         env.subjects.length
+      end
+
+      # Test if processing needs to stop
+      #
+      # @return [Boolean]
+      #
+      def stop?
+        env.config.fail_fast && !subject_results.all?(&:success?)
       end
 
     end # Env
@@ -146,28 +156,28 @@ module Mutant
 
       # Amount of mutations
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def amount_mutation_results
         mutation_results.length
       end
 
       # Amount of mutations
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def amount_mutations
         subject.mutations.length
       end
 
       # Number of killed mutations
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def amount_mutations_killed
         killed_mutation_results.length
       end
 
       # Number of alive mutations
       #
-      # @return [Fixnum]
+      # @return [Integer]
       def amount_mutations_alive
         alive_mutation_results.length
       end
@@ -187,30 +197,30 @@ module Mutant
     # Mutation result
     class Mutation
       include Result, Anima.new(
+        :isolation_result,
         :mutation,
-        :test_result
+        :runtime
       )
 
-      # The runtime
+      # Time the tests had been running
       #
       # @return [Float]
-      def runtime
-        test_result.runtime
+      def killtime
+        if isolation_result.success?
+          isolation_result.value.runtime
+        else
+          0.0
+        end
       end
-
-      # The time spent on killing
-      #
-      # @return [Float]
-      #
-      # @api private
-      alias_method :killtime, :runtime
 
       # Test if mutation was handled successfully
       #
       # @return [Boolean]
       def success?
-        mutation.class.success?(test_result)
+        isolation_result.success? &&
+          mutation.class.success?(isolation_result.value)
       end
+      memoize :success?
 
     end # Mutation
   end # Result

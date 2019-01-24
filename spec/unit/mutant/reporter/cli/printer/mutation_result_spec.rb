@@ -1,10 +1,32 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Reporter::CLI::Printer::MutationResult do
   setup_shared_context
 
   let(:reportable) { mutation_a_result }
 
   describe '.call' do
-    context 'failed kill' do
+    context 'isolation problem' do
+      let(:status) do
+        instance_double(Process::Status)
+      end
+
+      let(:mutation_a_isolation_result) do
+        Mutant::Isolation::Fork::ChildError.new(status)
+      end
+
+      it_reports(<<~'REPORT')
+        evil:subject-a:d27d2
+        @@ -1,2 +1,2 @@
+        -true
+        +false
+        Killfork exited nonzero. Its result (if any) was ignored:
+        #<InstanceDouble(Process::Status) (anonymous)>
+        -----------------------
+      REPORT
+    end
+
+    context 'unsucessful result' do
       with(:mutation_a_test_result) { { passed: true } }
 
       context 'on evil mutation' do
@@ -26,7 +48,7 @@ RSpec.describe Mutant::Reporter::CLI::Printer::MutationResult do
           end
 
           context 'on non tty' do
-            it_reports(<<-'STR')
+            it_reports(<<~'STR')
               evil:subject-a:d27d2
               @@ -1,2 +1,2 @@
               -true
@@ -43,10 +65,12 @@ RSpec.describe Mutant::Reporter::CLI::Printer::MutationResult do
           # Unparses exactly the same way as above node
           let(:mutation_a_node) { s(:zsuper) }
 
-          it_reports(<<-REPORT)
+          it_reports(<<~REPORT)
             evil:subject-a:a5bc7
             --- Internal failure ---
-            BUG: Mutation NOT resulted in exactly one diff hunk. Please report a reproduction!
+            BUG: A generted mutation did not result in exactly one diff hunk!
+            This is an invariant violation by the mutation generation engine.
+            Please report a reproduction to https://github.com/mbj/mutant
             Original unparsed source:
             super
             Original AST:
@@ -67,7 +91,7 @@ RSpec.describe Mutant::Reporter::CLI::Printer::MutationResult do
           Mutant::Mutation::Neutral.new(subject_a, s(:true))
         end
 
-        it_reports(<<-REPORT)
+        it_reports(<<~REPORT)
           neutral:subject-a:d5318
           --- Neutral failure ---
           Original code was inserted unmutated. And the test did NOT PASS.
@@ -76,11 +100,6 @@ RSpec.describe Mutant::Reporter::CLI::Printer::MutationResult do
           s(:true)
           Unparsed Source:
           true
-          Test Result:
-          - 1 @ runtime: 1.0
-            - test-a
-          Test Output:
-          mutation a test result output
           -----------------------
         REPORT
       end
@@ -92,16 +111,11 @@ RSpec.describe Mutant::Reporter::CLI::Printer::MutationResult do
           Mutant::Mutation::Noop.new(subject_a, s(:true))
         end
 
-        it_reports(<<-REPORT)
+        it_reports(<<~REPORT)
           noop:subject-a:d5318
           ---- Noop failure -----
           No code was inserted. And the test did NOT PASS.
           This is typically a problem of your specs not passing unmutated.
-          Test Result:
-          - 1 @ runtime: 1.0
-            - test-a
-          Test Output:
-          mutation a test result output
           -----------------------
         REPORT
       end

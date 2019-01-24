@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Reporter::CLI::Printer::EnvProgress do
   setup_shared_context
 
@@ -7,7 +9,7 @@ RSpec.describe Mutant::Reporter::CLI::Printer::EnvProgress do
     context 'without progress' do
       with(:subject_a_result) { { mutation_results: [] } }
 
-      it_reports <<-'STR'
+      it_reports <<~'STR'
         Mutant configuration:
         Matcher:         #<Mutant::Matcher::Config empty>
         Integration:     Mutant::Integration::Null
@@ -28,7 +30,7 @@ RSpec.describe Mutant::Reporter::CLI::Printer::EnvProgress do
     end
 
     context 'on full coverage' do
-      it_reports <<-'STR'
+      it_reports <<~'STR'
         Mutant configuration:
         Matcher:         #<Mutant::Matcher::Config empty>
         Integration:     Mutant::Integration::Null
@@ -51,7 +53,7 @@ RSpec.describe Mutant::Reporter::CLI::Printer::EnvProgress do
     context 'on partial coverage' do
       with(:mutation_a_test_result) { { passed: true } }
 
-      it_reports <<-'STR'
+      it_reports <<~'STR'
         Mutant configuration:
         Matcher:         #<Mutant::Matcher::Config empty>
         Integration:     Mutant::Integration::Null

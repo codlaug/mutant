@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Subject::Method::Singleton do
 
   let(:object)  { described_class.new(context, node) }
@@ -9,8 +11,7 @@ RSpec.describe Mutant::Subject::Method::Singleton do
 
   let(:scope) do
     Class.new do
-      def self.foo
-      end
+      def self.foo; end
 
       def self.name
         'Test'

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Mutator
     class Node
@@ -18,6 +20,7 @@ module Mutant
           reverse_each:  %i[each],
           reverse_merge: %i[merge],
           map:           %i[each],
+          flat_map:      %i[map],
           sample:        %i[first last],
           pop:           %i[last],
           shift:         %i[first],
@@ -35,7 +38,8 @@ module Mutant
           at:            %i[fetch key?],
           fetch:         %i[key?],
           values_at:     %i[fetch_values],
-          :[] =>         %i[at fetch key?],
+          match:         %i[match?],
+          '=~':          %i[match?],
           :== =>         %i[eql? equal?],
           :>= =>         %i[> == eql? equal?],
           :<= =>         %i[< == eql? equal?],
@@ -56,17 +60,7 @@ module Mutant
         # @return [undefined]
         def dispatch
           emit_singletons
-          if meta.index_assignment?
-            run(Index::Assign)
-          else
-            non_index_dispatch
-          end
-        end
 
-        # Perform non index dispatch
-        #
-        # @return [undefined]
-        def non_index_dispatch
           if meta.binary_method_operator?
             run(Binary)
           elsif meta.attribute_assignment?
@@ -110,7 +104,8 @@ module Mutant
           emit_const_get_mutation
           emit_integer_mutation
           emit_dig_mutation
-          emit_drop_mutation
+          emit_double_negation_mutation
+          emit_lambda_mutation
         end
 
         # Emit selector mutations specific to top level constants
@@ -123,6 +118,23 @@ module Mutant
             .fetch(receiver.children.last, EMPTY_HASH)
             .fetch(selector, EMPTY_ARRAY)
             .each(&method(:emit_selector))
+        end
+
+        # Emit mutation from `!!foo` to `foo`
+        #
+        # @return [undefined]
+        def emit_double_negation_mutation
+          return unless selector.equal?(:!) && n_send?(receiver)
+
+          negated = AST::Meta::Send.new(meta.receiver)
+          emit(negated.receiver) if negated.selector.equal?(:!)
+        end
+
+        # Emit mutation from proc definition to lambda
+        #
+        # @return [undefined]
+        def emit_lambda_mutation
+          emit(s(:send, nil, :lambda)) if meta.proc?
         end
 
         # Emit mutation for `#dig`
@@ -143,24 +155,11 @@ module Mutant
           emit(s(:send, fetch_mutation, :dig, *tail))
         end
 
-        # Emit mutation `foo[n..-1]` -> `foo.drop(n)`
-        #
-        # @return [undefined]
-        def emit_drop_mutation
-          return if !selector.equal?(:[]) || !arguments.one? || !n_irange?(arguments.first)
-
-          start, ending = *arguments.first
-
-          return unless ending.eql?(s(:int, -1))
-
-          emit(s(:send, receiver, :drop, start))
-        end
-
         # Emit mutation from `to_i` to `Integer(...)`
         #
         # @return [undefined]
         def emit_integer_mutation
-          return unless selector.equal?(:to_i)
+          return unless receiver && selector.equal?(:to_i)
 
           emit(s(:send, nil, :Integer, receiver))
         end
@@ -203,8 +202,7 @@ module Mutant
         #
         # @return [undefined]
         def emit_argument_propagation
-          node = arguments.first
-          emit(node) if arguments.one? && !NOT_STANDALONE.include?(node.type)
+          emit_propagation(Mutant::Util.one(arguments)) if arguments.one?
         end
 
         # Emit receiver mutations
@@ -232,5 +230,4 @@ module Mutant
       end # Send
     end # Node
   end # Mutator
-
 end # Mutant

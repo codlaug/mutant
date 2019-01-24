@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Mutator
     class Node
@@ -6,7 +8,7 @@ module Mutant
       class Argument < self
         handle(:arg, :kwarg)
 
-        UNDERSCORE = '_'.freeze
+        UNDERSCORE = '_'
 
         children :name
 
@@ -65,7 +67,6 @@ module Mutant
           end
 
         end # Optional
-
       end # Argument
     end # Node
   end # Mutator

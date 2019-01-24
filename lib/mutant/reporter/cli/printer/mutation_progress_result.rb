@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 module Mutant
   class Reporter
     class CLI
       class Printer
         # Printer for mutation progress results
         class MutationProgressResult < self
-          SUCCESS = '.'.freeze
-          FAILURE = 'F'.freeze
+          SUCCESS = '.'
+          FAILURE = 'F'
 
           # Run printer
           #

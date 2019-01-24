@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Mutant::Repository::SubjectFilter do
   context '#call' do
     subject { object.call(mutant_subject) }

@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module Mutant
   # Represent a mutated node with its subject
   class Mutation
     include AbstractType, Adamantium::Flat
     include Concord::Public.new(:subject, :node)
 
-    CODE_DELIMITER = "\0".freeze
+    CODE_DELIMITER = "\0"
     CODE_RANGE     = (0..4).freeze
 
     # Identification string
@@ -30,6 +32,14 @@ module Mutant
       Unparser.unparse(node)
     end
     memoize :source
+
+    # The monkeypatch to insert the mutation
+    #
+    # @return [String]
+    def monkeypatch
+      Unparser.unparse(subject.context.root(node))
+    end
+    memoize :monkeypatch
 
     # Normalized original source
     #
@@ -57,7 +67,7 @@ module Mutant
       Loader.call(
         binding: TOPLEVEL_BINDING,
         kernel:  kernel,
-        node:    root,
+        source:  monkeypatch,
         subject: subject
       )
       self
@@ -73,17 +83,10 @@ module Mutant
     end
     memoize :sha1
 
-    # Mutated root node
-    #
-    # @return [Parser::AST::Node]
-    def root
-      subject.context.root(node)
-    end
-
     # Evil mutation that should case mutations to fail tests
     class Evil < self
 
-      SYMBOL            = 'evil'.freeze
+      SYMBOL            = 'evil'
       TEST_PASS_SUCCESS = false
 
     end # Evil
@@ -91,7 +94,7 @@ module Mutant
     # Neutral mutation that should not cause mutations to fail tests
     class Neutral < self
 
-      SYMBOL            = 'neutral'.freeze
+      SYMBOL            = 'neutral'
       TEST_PASS_SUCCESS = true
 
     end # Neutral
@@ -99,7 +102,7 @@ module Mutant
     # Noop mutation, special case of neutral
     class Noop < Neutral
 
-      SYMBOL            = 'noop'.freeze
+      SYMBOL            = 'noop'
       TEST_PASS_SUCCESS = true
 
     end # Noop

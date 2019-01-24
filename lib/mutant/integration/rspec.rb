@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rspec/core'
 
 module Mutant
@@ -23,10 +25,10 @@ module Mutant
 
       ALL_EXPRESSION       = Expression::Namespace::Recursive.new(scope_name: nil)
       EXPRESSION_CANDIDATE = /\A([^ ]+)(?: )?/.freeze
-      LOCATION_DELIMITER   = ':'.freeze
+      LOCATION_DELIMITER   = ':'
       EXIT_SUCCESS         = 0
       CLI_OPTIONS          = IceNine.deep_freeze(%w[spec --fail-fast])
-      TEST_ID_FORMAT       = 'rspec:%<index>d:%<location>s/%<description>s'.freeze
+      TEST_ID_FORMAT       = 'rspec:%<index>d:%<location>s/%<description>s'
 
       private_constant(*constants(false))
 
@@ -59,13 +61,13 @@ module Mutant
       def call(tests)
         examples = tests.map(&all_tests_index.method(:fetch))
         filter_examples(&examples.method(:include?))
-        start = Time.now
+        start = Timer.now
         passed = @runner.run_specs(@world.ordered_example_groups).equal?(EXIT_SUCCESS)
         @output.rewind
         Result::Test.new(
           output:  @output.read,
           passed:  passed,
-          runtime: Time.now - start,
+          runtime: Timer.now - start,
           tests:   tests
         )
       end
@@ -93,7 +95,7 @@ module Mutant
       # Parse example into test
       #
       # @param [RSpec::Core::Example] example
-      # @param [Fixnum] index
+      # @param [Integer] index
       #
       # @return [Test]
       def parse_example(example, index)

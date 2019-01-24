@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   module Meta
     class Example
@@ -7,9 +9,12 @@ module Mutant
 
         # Run DSL on block
         #
+        # @param [Pathname] file
+        # @param [Set<Symbol>] types
+        #
         # @return [Example]
-        def self.call(file, type, block)
-          instance = new(file, type)
+        def self.call(file, types, block)
+          instance = new(file, types)
           instance.instance_eval(&block)
           instance.example
         end
@@ -19,9 +24,9 @@ module Mutant
         # Initialize object
         #
         # @return [undefined]
-        def initialize(file, type)
+        def initialize(file, types)
           @file     = file
-          @type     = type
+          @types    = types
           @node     = nil
           @expected = []
         end
@@ -35,10 +40,10 @@ module Mutant
         def example
           fail 'source not defined' unless @node
           Example.new(
-            file:      @file,
-            node:      @node,
-            node_type: @type,
-            expected:  @expected
+            file:     @file,
+            node:     @node,
+            types:    @types,
+            expected: @expected
           )
         end
 
@@ -94,7 +99,7 @@ module Mutant
         def node(input)
           case input
           when String
-            Unparser::Preprocessor.run(::Parser::CurrentRuby.parse(input))
+            Unparser::Preprocessor.run(Unparser.parse(input))
           when ::Parser::AST::Node
             input
           else

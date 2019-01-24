@@ -1,3 +1,79 @@
+# v0.8.25 2018-12-31
+
+* Change to {I,M}Var based concurrency
+* Remove actors
+
+# v0.8.24 2018-12-29
+
+* Change to always insert mutations with frozen string literals
+* Fix various invalid AST or source mutations
+* Handle regexp `regexp_parser` cannot parse but MRI accepts gracefully
+
+# v0.8.23 2018-12-23
+
+* Improved isolation error reporting
+* Errors between isolation and tests do not kill mutations anymore.
+
+# v0.8.22 2018-12-04
+
+* Remove hard ruby version requirement. 2.5 is still the only officially supported version.
+
+# v0.8.21 2018-12-03
+
+* Change to modern ast format via unparser-0.4.1.
+
+# v0.8.20 2018-11-27
+
+* Replace internal timers with monotonic ones.
+
+# v0.8.19 2018-11-06
+
+* Drop support for Ruby < 2.5
+* Fix bug when mutating a module that includes Memoizable
+
+# v0.8.18 2018-10-24
+
+* Add support for regexp unicode print nodes https://github.com/mbj/mutant/pull/749
+
+# v0.8.17 2018-09-12
+
+* Drop support for Ruby < 2.3
+* Use frozen string literals globally
+* Update to parser ~> 2.5
+
+# v0.8.16 2018-08-03
+
+* Support for rspec-3.x
+
+# v0.8.15 2018-07-17
+
+* Fix boot time issue
+* Support for rspec-3.7
+
+# v0.8.14 2017-07-06
+
+* Support ruby 2.4 #719
+
+# v0.8.13 2017-06-01
+
+* Allow empty match expressions on CLI
+* Add support for rspec-3.6 by @krzysiek150
+* Add support for configurable corpus glob exprssions by @jekuta
+
+# v0.8.12 2016-10-17
+
+* Add mutation from `/foo|bar/` to `/foo/` and `/bar/`
+* Add mutation from `/$/` to `/\z/`
+* Add mutation from `/\h/` to `/\H/`
+* Add mutation from `/\H/` to `/\h/`
+* Add mutation from `/\Z/` to `/\z/`
+* Add mutation from `flat_map` to `map`
+* Add mutation from `/(foo)/` to `/(?:foo)/`
+* Add mutation from `/a*/` to `/a+/`
+* Add mutation from `/a*/` to `/a/`
+* Add mutation from `!!foo` to `foo`
+* Add mutation from `proc { }` to `lambda { }`
+
 # v0.8.11 2016-08-01
 
 * Add support for rspec-3.5
@@ -5,6 +81,18 @@
 * Remove misleading `--expect-coverage` option
 * Add basic support for regexp mutations (machinery and simple anchor mutations)
 * Add support for mutating csend (duck tape operator) into regular sends
+* Add mutation from `foo&.bar` to `foo.bar`
+* Add mutation from `#to_a` to `#to_set`
+* Add mutation from `foo.dig(a, b)` to `foo.fetch(a).dig(b)`
+* Add mutation from `def foo(bar:); end` to `def foo(_bar:); end`
+* Add mutation from `def foo(bar: baz); end` to `def foo(_bar: baz); end`
+* Add mutation from `/regex/i` to `/regex/`
+* Add mutation from `foo[n..-1]` to `foo.drop(n)`
+* Add mutation from `/^/` to `/\A/`
+* Add mutation from `#first` to `#last`
+* Add mutation from `#last` to `#first`
+* Add mutation from `#sample` to `#first` and `#last`
+* Remove mutations from `1..n` to `1..(0.0 / 0.0)` and `1..(1.0 / 0.0)`
 
 # v0.8.10 2016-01-24
 

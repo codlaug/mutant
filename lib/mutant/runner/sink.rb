@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Runner
     class Sink
@@ -8,7 +10,7 @@ module Mutant
       # @return [undefined]
       def initialize(*)
         super
-        @start           = Time.now
+        @start           = Timer.now
         @subject_results = {}
       end
 
@@ -18,7 +20,7 @@ module Mutant
       def status
         Result::Env.new(
           env:             env,
-          runtime:         Time.now - @start,
+          runtime:         Timer.now - @start,
           subject_results: @subject_results.values
         )
       end
@@ -27,7 +29,7 @@ module Mutant
       #
       # @return [Boolean]
       def stop?
-        env.config.fail_fast && !status.subject_results.all?(&:success?)
+        status.stop?
       end
 
       # Handle mutation finish
@@ -41,7 +43,7 @@ module Mutant
         @subject_results[subject] = Result::Subject.new(
           subject:          subject,
           mutation_results: previous_mutation_results(subject) + [mutation_result],
-          tests:            mutation_result.test_result.tests
+          tests:            env.selections.fetch(subject)
         )
 
         self

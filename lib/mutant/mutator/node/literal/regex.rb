@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Mutator
     class Node
@@ -8,7 +10,7 @@ module Mutant
           handle(:regexp)
 
           # No input can ever be matched with this
-          NULL_REGEXP_SOURCE = 'nomatch\A'.freeze
+          NULL_REGEXP_SOURCE = 'nomatch\A'
 
         private
 
@@ -40,8 +42,7 @@ module Mutant
           #
           # @return [undefined]
           def mutate_body
-            return unless body.all?(&method(:n_str?))
-            return unless AST::Regexp.supported?(body_expression)
+            return unless body.all?(&method(:n_str?)) && body_ast
 
             Mutator.mutate(body_ast).each do |mutation|
               source = AST::Regexp.to_expression(mutation).to_s
@@ -51,14 +52,14 @@ module Mutant
 
           # AST representation of regexp body
           #
-          # @return [Parser::AST::Node]
+          # @return [Parser::AST::Node, nil]
           def body_ast
-            AST::Regexp.to_ast(body_expression)
+            body_expression and AST::Regexp.to_ast(body_expression)
           end
 
           # Expression representation of regexp body
           #
-          # @return [Regexp::Expression]
+          # @return [Regexp::Expression, nil]
           def body_expression
             AST::Regexp.parse(body.map(&:children).join)
           end

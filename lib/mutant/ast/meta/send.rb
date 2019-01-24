@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   module AST
     # Node meta information mixin
@@ -12,7 +14,7 @@ module Mutant
         public :receiver, :selector
 
         INDEX_ASSIGNMENT_SELECTOR            = :[]=
-        ATTRIBUTE_ASSIGNMENT_SELECTOR_SUFFIX = '='.freeze
+        ATTRIBUTE_ASSIGNMENT_SELECTOR_SUFFIX = '='
 
         # Arguments of mutated node
         #
@@ -21,26 +23,19 @@ module Mutant
 
         public :arguments
 
-        # Test if AST node is a valid assignment target
+        # Test if node is defining a proc
         #
         # @return [Boolean]
-        def assignment?
-          index_assignment? || attribute_assignment?
+        def proc?
+          naked_proc? || proc_new?
         end
 
-        # Test if AST node is an attribute assignment?
+        # Test if AST node is a valid attribute assignment
         #
         # @return [Boolean]
         def attribute_assignment?
           !Types::METHOD_OPERATORS.include?(selector) &&
           selector.to_s.end_with?(ATTRIBUTE_ASSIGNMENT_SELECTOR_SUFFIX)
-        end
-
-        # Test if AST node is an index assign
-        #
-        # @return [Boolean]
-        def index_assignment?
-          selector.equal?(INDEX_ASSIGNMENT_SELECTOR)
         end
 
         # Test for binary operator implemented as method
@@ -57,6 +52,25 @@ module Mutant
           return false unless receiver && n_const?(receiver)
 
           Const.new(receiver).possible_top_level?
+        end
+
+      private
+
+        # Test if node is `proc { ... }`
+        #
+        # @return [Boolean]
+        def naked_proc?
+          !receiver && selector.equal?(:proc)
+        end
+
+        # Test if node is `Proc.new { ... }`
+        #
+        # @return [Boolean]
+        def proc_new?
+          receiver                &&
+            selector.equal?(:new) &&
+            n_const?(receiver)    &&
+            Const.new(receiver).name.equal?(:Proc)
         end
 
       end # Send

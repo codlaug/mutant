@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   class Matcher
     class Method
@@ -10,10 +12,12 @@ module Mutant
         # @param [UnboundMethod] method
         #
         # @return [Matcher::Method::Instance]
+        #
+        # :reek:ManualDispatch
         def self.new(scope, target_method)
           name = target_method.name
           evaluator =
-            if scope.include?(Memoizable) && scope.memoized?(name)
+            if scope.respond_to?(:memoized?) && scope.memoized?(name)
               Evaluator::Memoized
             else
               Evaluator
@@ -48,7 +52,7 @@ module Mutant
 
             # Source location
             #
-            # @return [Array{String,Fixnum}]
+            # @return [Array{String,Integer}]
             def source_location
               scope
                 .unmemoized_instance_method(method_name)

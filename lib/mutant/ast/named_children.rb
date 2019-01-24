@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutant
   module AST
 
@@ -38,7 +40,7 @@ module Mutant
         # Define named child
         #
         # @param [Symbol] name
-        # @param [Fixnum] index
+        # @param [Integer] index
         #
         # @return [undefined]
         def define_named_child(name, index)

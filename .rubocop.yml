@@ -1,7 +1,7 @@
 AllCops:
+  DisplayCopNames: true
   Exclude:
-    - 'vendor/**/*'
-    - 'tmp/**/*'
     - 'test_app/**/*'
-    - 'bin/mutant'
-  TargetRubyVersion: 2.2
+    - 'tmp/**/*'
+    - 'vendor/**/*'
+  TargetRubyVersion: 2.5

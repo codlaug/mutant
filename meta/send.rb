@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Mutant::Meta::Example.add :send do
   source 'a > b'
 
@@ -126,6 +128,20 @@ Mutant::Meta::Example.add :send do
 
   singleton_mutations
   mutation 'each'
+end
+
+Mutant::Meta::Example.add :send do
+  source 'flat_map'
+
+  singleton_mutations
+  mutation 'map'
+end
+
+Mutant::Meta::Example.add :send do
+  source 'to_i'
+
+  singleton_mutations
+  mutation 'to_int'
 end
 
 Mutant::Meta::Example.add :send do
@@ -338,20 +354,6 @@ Mutant::Meta::Example.add :send do
 end
 
 Mutant::Meta::Example.add :send do
-  source 'foo[bar] = baz'
-
-  singleton_mutations
-  mutation 'foo'
-  mutation 'foo[bar]'
-  mutation 'foo[bar] = self'
-  mutation 'foo[bar] = nil'
-  mutation 'foo[nil] = baz'
-  mutation 'foo[self] = baz'
-  mutation 'foo[] = baz'
-  mutation 'baz'
-end
-
-Mutant::Meta::Example.add :send do
   source 'foo(*bar)'
 
   singleton_mutations
@@ -469,36 +471,6 @@ Mutant::Meta::Example.add :send do
 end
 
 Mutant::Meta::Example.add :send do
-  source 'foo[1]'
-
-  singleton_mutations
-  mutation '1'
-  mutation 'foo'
-  mutation 'foo[]'
-  mutation 'foo.at(1)'
-  mutation 'foo.fetch(1)'
-  mutation 'foo.key?(1)'
-  mutation 'self[1]'
-  mutation 'foo[0]'
-  mutation 'foo[2]'
-  mutation 'foo[-1]'
-  mutation 'foo[nil]'
-  mutation 'foo[self]'
-end
-
-Mutant::Meta::Example.add :send do
-  source 'self.foo[]'
-
-  singleton_mutations
-  mutation 'self.foo'
-  mutation 'self.foo.at()'
-  mutation 'self.foo.fetch()'
-  mutation 'self.foo.key?()'
-  mutation 'self[]'
-  mutation 'foo[]'
-end
-
-Mutant::Meta::Example.add :send do
   source 'foo(n..-1)'
 
   singleton_mutations
@@ -516,109 +488,7 @@ Mutant::Meta::Example.add :send do
   mutation 'foo(n..-2)'
 end
 
-Mutant::Meta::Example.add :send do
-  source 'foo[n..-2]'
-
-  singleton_mutations
-  mutation 'n..-2'
-  mutation 'foo'
-  mutation 'foo[]'
-  mutation 'foo.at(n..-2)'
-  mutation 'foo.fetch(n..-2)'
-  mutation 'foo.key?(n..-2)'
-  mutation 'self[n..-2]'
-  mutation 'foo[nil]'
-  mutation 'foo[self]'
-  mutation 'foo[n..nil]'
-  mutation 'foo[n..self]'
-  mutation 'foo[n..-1]'
-  mutation 'foo[n..2]'
-  mutation 'foo[n..0]'
-  mutation 'foo[n..1]'
-  mutation 'foo[n..-3]'
-  mutation 'foo[n...-2]'
-  mutation 'foo[nil..-2]'
-  mutation 'foo[self..-2]'
-end
-
-Mutant::Meta::Example.add :send do
-  source 'foo[n...-1]'
-
-  singleton_mutations
-  mutation 'n...-1'
-  mutation 'foo'
-  mutation 'foo[]'
-  mutation 'foo.at(n...-1)'
-  mutation 'foo.fetch(n...-1)'
-  mutation 'foo.key?(n...-1)'
-  mutation 'self[n...-1]'
-  mutation 'foo[nil]'
-  mutation 'foo[self]'
-  mutation 'foo[n...nil]'
-  mutation 'foo[n...self]'
-  mutation 'foo[n..-1]'
-  mutation 'foo[n...0]'
-  mutation 'foo[n...1]'
-  mutation 'foo[n...-2]'
-  mutation 'foo[nil...-1]'
-  mutation 'foo[self...-1]'
-end
-
-Mutant::Meta::Example.add :send do
-  source 'foo[n..-1]'
-
-  singleton_mutations
-  mutation 'n..-1'
-  mutation 'foo'
-  mutation 'foo[]'
-  mutation 'foo.at(n..-1)'
-  mutation 'foo.fetch(n..-1)'
-  mutation 'foo.key?(n..-1)'
-  mutation 'self[n..-1]'
-  mutation 'foo[nil]'
-  mutation 'foo[self]'
-  mutation 'foo[n..nil]'
-  mutation 'foo[n..self]'
-  mutation 'foo[n..0]'
-  mutation 'foo[n..1]'
-  mutation 'foo[n..-2]'
-  mutation 'foo[n...-1]'
-  mutation 'foo[nil..-1]'
-  mutation 'foo[self..-1]'
-  mutation 'foo.drop(n)'
-end
-
-Mutant::Meta::Example.add :send do
-  source 'self[foo]'
-
-  singleton_mutations
-  mutation 'self[self]'
-  mutation 'self[nil]'
-  mutation 'self[]'
-  mutation 'self.at(foo)'
-  mutation 'self.fetch(foo)'
-  mutation 'self.key?(foo)'
-  mutation 'foo'
-end
-
-Mutant::Meta::Example.add :send do
-  source 'foo[*bar]'
-
-  singleton_mutations
-  mutation 'foo'
-  mutation 'foo[]'
-  mutation 'foo.at(*bar)'
-  mutation 'foo.fetch(*bar)'
-  mutation 'foo.key?(*bar)'
-  mutation 'foo[nil]'
-  mutation 'foo[self]'
-  mutation 'foo[bar]'
-  mutation 'foo[*self]'
-  mutation 'foo[*nil]'
-  mutation 'self[*bar]'
-end
-
-(Mutant::AST::Types::BINARY_METHOD_OPERATORS - %i[<= >= < > == != eql?]).each do |operator|
+(Mutant::AST::Types::BINARY_METHOD_OPERATORS - %i[=~ <= >= < > == != eql?]).each do |operator|
   Mutant::Meta::Example.add :send do
     source "true #{operator} false"
 
@@ -680,4 +550,87 @@ Mutant::Meta::Example.add :send do
 
   singleton_mutations
   mutation 'first'
+end
+
+Mutant::Meta::Example.add :send do
+  source '!!foo'
+
+  singleton_mutations
+  mutation '!foo'
+  mutation '!self'
+  mutation '!!self'
+  mutation 'foo'
+end
+
+Mutant::Meta::Example.add :send do
+  source '!foo'
+
+  singleton_mutations
+  mutation 'foo'
+  mutation '!self'
+end
+
+Mutant::Meta::Example.add :send do
+  source '!foo&.!'
+
+  singleton_mutations
+  mutation 'foo&.!'
+  mutation '!self'
+  mutation '!foo'
+  mutation '!self&.!'
+  mutation '!(!foo)'
+end
+
+Mutant::Meta::Example.add :send do
+  source 'custom.proc { }'
+
+  singleton_mutations
+  mutation 'custom.proc'
+  mutation 'custom { }'
+  mutation 'self.proc { }'
+  mutation 'custom.proc { raise }'
+end
+
+Mutant::Meta::Example.add :send do
+  source 'proc { }'
+
+  singleton_mutations
+  mutation 'proc'
+  mutation 'proc { raise }'
+  mutation 'lambda { }'
+end
+
+Mutant::Meta::Example.add :send do
+  source 'Proc.new { }'
+
+  singleton_mutations
+  mutation 'Proc.new'
+  mutation 'self.new { }'
+  mutation 'Proc.new { raise }'
+  mutation 'lambda { }'
+end
+
+Mutant::Meta::Example.add :send do
+  source 'a =~ //'
+
+  singleton_mutations
+  mutation 'a'
+  mutation 'nil =~ //'
+  mutation 'self =~ //'
+  mutation '//'
+  mutation 'a =~ /nomatch\A/'
+  mutation 'a.match?(//)'
+end
+
+Mutant::Meta::Example.add :send do
+  source '//.match(a)'
+
+  singleton_mutations
+  mutation 'a'
+  mutation '//.match'
+  mutation '//.match(nil)'
+  mutation '//.match(self)'
+  mutation '//.match?(a)'
+  mutation '//'
+  mutation '/nomatch\A/.match(a)'
 end
